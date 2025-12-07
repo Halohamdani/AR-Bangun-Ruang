@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR Kubus Animasi - Mobile Ready</title>
+
+  <!-- A-FRAME -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <!-- AR.js -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #titleBox {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 9999;
+      box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      letter-spacing: 0.5px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      #titleBox {
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        top: 10px;
+      }
+    }
+
+    .panel {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      width: 85%;
+      max-width: 380px;
+      gap: 12px;
+      z-index: 9999;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      .panel {
+        width: 92%;
+        max-width: 340px;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        bottom: 15px;
+      }
+    }
+
+    .btn {
+      padding: 16px 18px;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      .btn {
+        padding: 12px 10px;
+        font-size: 12px;
+        border-radius: 12px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .btn {
+        padding: 10px 8px;
+        font-size: 11px;
+      }
+    }
+
+    .btn.green {
+      background: linear-gradient(135deg, #51cf66 0%, #2f9e44 100%);
+    }
+
+    .btn.red {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    }
+
+    .btn.blue {
+      background: linear-gradient(135deg, #4dabf7 0%, #339af0 100%);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn.active {
+      transform: scale(1.05);
+      border: 3px solid rgba(255, 255, 255, 0.6);
+    }
+
+    #scanStatus {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      z-index: 9999;
+      display: none;
+      font-weight: bold;
+      font-size: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      #scanStatus {
+        top: 55px;
+        padding: 8px 16px;
+        font-size: 12px;
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="titleBox">AR Kubus Animasi</div>
+  <div id="scanStatus"></div>
+
+  <!-- PANEL BUTTONS -->
+  <div class="panel">
+    <button class="btn green active" id="btnBuka" onclick="bukaTutup('buka')">🔓 Buka</button>
+    <button class="btn red" id="btnTutup" onclick="bukaTutup('tutup')">🔒 Tutup</button>
+    <button class="btn blue" id="btnAutoRotate" onclick="toggleAutoRotate()">🔄 Auto Rotasi</button>
+    <button class="btn blue" onclick="stopRotation()">⏸ Rotasi Berhenti</button>
+  </div>
+
+  <!-- AR SCENE -->
+  <a-scene embedded arjs="sourceType: webcam; facingMode: environment;">
+    <a-assets>
+      <!-- Model Terbuka -->
+      <a-asset-item id="kubus-obj" src="kubus.obj"></a-asset-item>
+      <a-asset-item id="kubus-mtl" src="kubus.mtl"></a-asset-item>
+      
+      <!-- Model Tertutup -->
+      <a-asset-item id="menutup-obj" src="menutup.obj"></a-asset-item>
+      <a-asset-item id="menutup-mtl" src="menutup.mtl"></a-asset-item>
+    </a-assets>
+
+    <a-marker preset="hiro" id="marker">
+      <!-- Model Terbuka (default) -->
+      <a-entity id="modelBuka" 
+                obj-model="obj: #kubus-obj; mtl: #kubus-mtl"
+                position="0 0 0" 
+                rotation="0 0 0" 
+                scale="0.3 0.3 0.3"
+                visible="true">
+      </a-entity>
+
+      <!-- Model Tertutup (hidden by default) -->
+      <a-entity id="modelTutup" 
+                obj-model="obj: #menutup-obj; mtl: #menutup-mtl"
+                position="0 0 0" 
+                rotation="0 0 0" 
+                scale="0.3 0.3 0.3"
+                visible="false">
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    let modelBuka = document.getElementById('modelBuka');
+    let modelTutup = document.getElementById('modelTutup');
+    let marker = document.getElementById('marker');
+    let statusBox = document.getElementById('scanStatus');
+    let btnBuka = document.getElementById('btnBuka');
+    let btnTutup = document.getElementById('btnTutup');
+    
+    let currentModel = 'buka'; // Track which model is active
+    let currentRotation = { x: 0, y: 0, z: 0 };
+    let autoRotateInterval = null;
+    let isAutoRotating = false;
+    let isAnimating = false; // Prevent multiple animations at once
+
+    /* Status marker */
+    marker.addEventListener('markerFound', () => {
+      showStatus('✔ Marker Terdeteksi!', 'green');
+    });
+    marker.addEventListener('markerLost', () => {
+      showStatus('✖ Marker Hilang', 'red');
+    });
+
+    function showStatus(msg, color) {
+      statusBox.innerHTML = msg;
+      statusBox.style.backgroundColor = color === 'green' ? 'rgba(46, 125, 50, 0.85)' : 'rgba(198, 40, 40, 0.85)';
+      statusBox.style.display = "block";
+      setTimeout(() => statusBox.style.display = "none", 1500);
+    }
+
+    /* BUKA / TUTUP ANIMATION WITH TRANSITION */
+    function bukaTutup(action) {
+      if (isAnimating) return; // Prevent multiple clicks during animation
+      
+      if (action === 'buka' && currentModel === 'buka') return;
+      if (action === 'tutup' && currentModel === 'tutup') return;
+
+      isAnimating = true;
+      
+      let oldModel = currentModel === 'buka' ? modelBuka : modelTutup;
+      let newModel = action === 'buka' ? modelBuka : modelTutup;
+
+      // Animation sequence: fade out + rotate, then fade in + rotate
+      animateModelTransition(oldModel, newModel, action);
+
+      if (action === 'buka') {
+        btnBuka.classList.add('active');
+        btnTutup.classList.remove('active');
+        currentModel = 'buka';
+        showStatus('🔓 Kubus Terbuka', 'green');
+      } else {
+        btnBuka.classList.remove('active');
+        btnTutup.classList.add('active');
+        currentModel = 'tutup';
+        showStatus('🔒 Kubus Tertutup', 'red');
+      }
+    }
+
+    function animateModelTransition(oldModel, newModel, action) {
+      // Phase 1: Rotate and scale down old model
+      let fadeOutSteps = 15;
+      let step = 0;
+      let fadeOutInterval = setInterval(() => {
+        step++;
+        let progress = step / fadeOutSteps;
+        
+        // Rotate while transitioning
+        let tempRotation = {
+          x: currentRotation.x,
+          y: currentRotation.y + (progress * 180), // Rotate 180 degrees
+          z: currentRotation.z
+        };
+        oldModel.setAttribute('rotation', tempRotation);
+        
+        // Scale down
+        let scale = 0.3 * (1 - progress * 0.5);
+        oldModel.setAttribute('scale', `${scale} ${scale} ${scale}`);
+
+        if (step >= fadeOutSteps) {
+          clearInterval(fadeOutInterval);
+          oldModel.setAttribute('visible', false);
+          oldModel.setAttribute('scale', '0.3 0.3 0.3'); // Reset scale
+          
+          // Phase 2: Rotate and scale up new model
+          newModel.setAttribute('visible', true);
+          newModel.setAttribute('scale', '0.15 0.15 0.15');
+          
+          let fadeInSteps = 15;
+          let stepIn = 0;
+          let fadeInInterval = setInterval(() => {
+            stepIn++;
+            let progressIn = stepIn / fadeInSteps;
+            
+            // Rotate while fading in
+            let tempRotation = {
+              x: currentRotation.x,
+              y: currentRotation.y - 180 + (progressIn * 180),
+              z: currentRotation.z
+            };
+            newModel.setAttribute('rotation', tempRotation);
+            
+            // Scale up
+            let scale = 0.15 + (progressIn * 0.15);
+            newModel.setAttribute('scale', `${scale} ${scale} ${scale}`);
+
+            if (stepIn >= fadeInSteps) {
+              clearInterval(fadeInInterval);
+              // Reset to normal state
+              newModel.setAttribute('scale', '0.3 0.3 0.3');
+              applyRotation();
+              isAnimating = false;
+            }
+          }, 20);
+        }
+      }, 20);
+    }
+
+    /* AUTO ROTATION */
+    function toggleAutoRotate() {
+      let btnAutoRotate = document.getElementById('btnAutoRotate');
+      
+      if (isAutoRotating) {
+        // Stop auto rotation
+        clearInterval(autoRotateInterval);
+        autoRotateInterval = null;
+        isAutoRotating = false;
+        btnAutoRotate.classList.remove('active');
+        showStatus('⏸ Auto Rotasi Berhenti', 'red');
+      } else {
+        // Start auto rotation
+        isAutoRotating = true;
+        btnAutoRotate.classList.add('active');
+        autoRotateInterval = setInterval(() => {
+          currentRotation.y += 2;
+          applyRotation();
+        }, 50); // Rotate every 50ms
+        showStatus('🔄 Auto Rotasi Aktif', 'green');
+      }
+    }
+
+    function stopRotation() {
+      if (autoRotateInterval) {
+        clearInterval(autoRotateInterval);
+        autoRotateInterval = null;
+        isAutoRotating = false;
+        let btnAutoRotate = document.getElementById('btnAutoRotate');
+        btnAutoRotate.classList.remove('active');
+      }
+      showStatus('⏹ Rotasi Berhenti', 'red');
+    }
+
+    function applyRotation() {
+      modelBuka.setAttribute('rotation', currentRotation);
+      modelTutup.setAttribute('rotation', currentRotation);
+    }
+  </script>
+
+</body>
+</html>
